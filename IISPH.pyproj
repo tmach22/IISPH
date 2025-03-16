@@ -31,6 +31,9 @@
     <Compile Include="src\sph.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="src\sph_parallel.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="external\" />

@@ -18,7 +18,7 @@ class Particle:
        
 
 class SPHSystem:
-    def __init__(self, num_particles, domain_size=1.0, time_step=0.01):
+    def __init__(self, num_particles, domain_size=1.0, time_step=0.1):
         self.particles = [Particle(position=[np.random.uniform(0.2,0.5), np.random.uniform(0.35,1)], velocity=[0.0, 0.0]) for _ in range(num_particles)]
         self.domain_size = domain_size
         self.particle_spacing = domain_size / np.sqrt(num_particles)
@@ -135,6 +135,13 @@ class SPHSystem:
             A[i,i] = sum_aij # Diagonal elements
             b[i] = bi # Right-hand side
 
+        # Diagonal preconditioning: Scale A and b by diagonal entries
+        for i in range(N):
+            diag_val = A[i, i]
+            if diag_val != 0:
+                A[i, :] /= diag_val  # Scale row i by 1/A[i,i]
+                b[i] /= diag_val
+
         return A, b
 
     def relaxed_jacobi_solve(self, A, b, max_iterations=100, omega=0.5, epsilon=1e-4):
@@ -145,18 +152,13 @@ class SPHSystem:
         for iteration in range(max_iterations):
             P_new = np.copy(P)
             residual_new = 0
-            pressure_sum = np.sum(np.abs(P)) + 1e-8 # Avoid division by zero
 
             for i in range(N):
-                sigma = sum(A[i,j]*P[j] for j in range(N) if j != i)
-                P_new[i] = (1-omega) * P[i] + omega * (b[i] - sigma) / A[i,i]
+                sigma = np.dot(A[i, :], P) - A[i, i] * P[i]  # A[i,i] = 1 after scaling
+                P_new[i] = (1 - omega) * P[i] + omega * (b[i] - sigma)  # No division by A[i,i]
                 residual_new += abs(P_new[i] - P[i])
-
             P = P_new
-
-            # Check convergence
-            residual = residual_new / pressure_sum
-            if residual < epsilon:
+            if np.max(np.abs(residual_new)) < epsilon:
                 break
         return P
 
@@ -200,9 +202,7 @@ class SPHSystem:
             p_i.density_gradient = grad_rho
 
 if __name__ == "__main__":
-    sph = SPHSystem(num_particles=20)
+    sph = SPHSystem(num_particles=40)
     sph.compute_density()
-    sph.compute_pressure()
-    sph.compute_density_gradient()
     renderer = ParticleRenderer(sph)
     renderer.run()

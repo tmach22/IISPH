@@ -85,7 +85,7 @@ class ParticleRenderer:
         glEnd()
 
 
-    def update_positions(self, dt):
+    def update_positions(self):
         """Update particle positions using the corrected velocity and apply boundary conditions for a sloping surface."""
         self.sph_system.compute_advection_velocity()
         self.sph_system.compute_advection_density()
@@ -102,7 +102,7 @@ class ParticleRenderer:
         n = n / np.linalg.norm(n)
 
         for p in self.sph_system.particles:
-            p.position += dt * p.velocity
+            p.position += self.sph_system.dt * p.velocity
             # Compute the y-value of the sloping boundary at particle's x position
             boundary_y = m * p.position[0] + b_val
             # If particle goes below the boundary, reposition it and reflect its y-velocity
@@ -114,7 +114,7 @@ class ParticleRenderer:
                 v_t = v - v_n                # Tangential component.
 
                 # Reflect the normal component with a restitution coefficient.
-                restitution = 0.3          # Adjust as needed.
+                restitution = 0.3         # Adjust as needed.
                 v_n_reflected = -restitution * v_n
 
                 # Apply friction to the tangential component.
@@ -132,14 +132,10 @@ class ParticleRenderer:
                 p.velocity[0] *= -0.8  # Invert x-velocity (with damping)
 
     def run(self):
-        last_time = time.time()
         while not glfw.window_should_close(self.window):
-            current_time = time.time()
-            dt = current_time - last_time
-            last_time = current_time
 
             glClear(GL_COLOR_BUFFER_BIT)
-            self.update_positions(dt)
+            self.update_positions()
             self.draw_particles()
             self.draw_boundary()
             glfw.swap_buffers(self.window)
