@@ -4,7 +4,7 @@ from OpenGL.GL import *
 import numpy as np
 
 class ParticleRenderer:
-    def __init__(self, sph_system, width=800, height=600):
+    def __init__(self, sph_system, width=400, height=400):
         self.sph_system = sph_system
         self.width = width
         self.height = height
