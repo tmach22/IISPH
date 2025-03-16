@@ -15,16 +15,19 @@ class Particle:
         self.density_star = 0.0
         self.pressure = 0.0
         self.density_gradient = np.array([0.0, 0.0], dtype=np.float32)  # for visualization
+       
 
 class SPHSystem:
     def __init__(self, num_particles, domain_size=1.0, time_step=0.01):
-        self.particles = [Particle(position=[np.random.uniform(0.0,0.5), np.random.uniform(0.35,1)], velocity=[0.0, 0.0]) for _ in range(num_particles)]
+        self.particles = [Particle(position=[np.random.uniform(0.2,0.5), np.random.uniform(0.35,1)], velocity=[0.0, 0.0]) for _ in range(num_particles)]
         self.domain_size = domain_size
         self.particle_spacing = domain_size / np.sqrt(num_particles)
         self.h = np.round(2 * self.particle_spacing, 4)
         self.dt = time_step
         self.boundary_slope = -0.35
         self.boundary_intercept = 0.3
+        self.left_wall_x = 0.1
+        self.right_wall_x = 0.8
 
     def print_particles(self):
         for i, p in enumerate(self.particles):
@@ -200,10 +203,6 @@ if __name__ == "__main__":
     sph = SPHSystem(num_particles=20)
     sph.compute_density()
     sph.compute_pressure()
-    # sph.compute_advection_velocity()
-    # sph.compute_advection_density()
-    # sph.solve_pressure()
-    # sph.apply_pressure_forces()
     sph.compute_density_gradient()
     renderer = ParticleRenderer(sph)
     renderer.run()
